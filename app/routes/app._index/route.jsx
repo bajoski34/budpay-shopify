@@ -19,8 +19,6 @@ import {
   Checkbox,
   Select,
   Spinner,
-  FooterHelp,
-  Link,
 } from "@shopify/polaris";
 
 import { authenticate } from "~/shopify.server";
@@ -30,7 +28,7 @@ import Welcome from "./welcome";
 
 /**
  * Loads the app's configuration if it exists.
-*/
+ */
 export const loader = async ({ request }) => {
   const { session } = await authenticate.admin(request);
   const apiKey = process.env.SHOPIFY_API_KEY;
@@ -49,29 +47,31 @@ export const action = async ({ request }) => {
   const formData = await request.formData();
   const config = {
     shop: session.shop,
-    accountName: formData.get("accountName"),
+    publicKey: formData.get("publicKey"),
+    secretKey: formData.get("secretKey"),
     ready: formData.get("ready") === "true",
     apiVersion: formData.get("apiVersion"),
   };
   const configuration = await getOrCreateConfiguration(session.id, config);
 
   const client = new PaymentsAppsClient(session.shop, session.accessToken);
-  const response = await client.paymentsAppConfigure(configuration.accountName, configuration.ready);
+  const response = await client.paymentsAppConfigure(configuration.publicKey, configuration.ready);
 
   const userErrors = response.userErrors || [];
 
   if (userErrors.length > 0) return json({ errors: userErrors });
   return json({ raiseBanner: true, errors: userErrors });
-}
+};
 
 export default function Index() {
   const nav = useNavigation();
   const { shopDomain, apiKey, config } = useLoaderData();
   const action = useActionData();
 
-  const [accountName, setAccountName] = useState(config ? config.accountName : '');
+  const [publicKey, setPublicKey] = useState(config ? config.publicKey : "");
+  const [secretKey, setSecretKey] = useState(config ? config.secretKey : "");
   const [ready, setReady] = useState(config ? config.ready : false);
-  const [apiVersion, setApiVersion] = useState(config ? config.ready : 'unstable');
+  const [apiVersion, setApiVersion] = useState(config ? config.apiVersion : "unstable");
   const [showBanner, setShowBanner] = useState(action ? action.raiseBanner : false);
   const [errors, setErrors] = useState([]);
 
@@ -86,52 +86,64 @@ export default function Index() {
   const errorBanner = () => (
     errors.length > 0 && (
       <Banner
-        title={'😢 An error ocurred!'}
+        title={"😢 An error occurred!"}
         status="critical"
-        onDismiss={() => { setErrors([]) }}
+        onDismiss={() => {
+          setErrors([]);
+        }}
       >
-        {
-          errors.map(({message}, idx) => (
-            <Text as="p" key={idx}>{message}</Text>
-          ))
-        }
+        {errors.map(({ message }, idx) => (
+          <Text as="p" key={idx}>
+            {message}
+          </Text>
+        ))}
       </Banner>
     )
-  )
+  );
 
   const banner = () => (
     showBanner && (
       <Banner
-        title={'🥰 Settings updated!'}
+        title={"🥰 Settings updated!"}
         action={{
-          content: 'Return to Shopify',
+          content: "Return to Shopify",
           url: `https://${shopDomain}/services/payments_partners/gateways/${apiKey}/settings`,
         }}
         status="success"
-        onDismiss={() => { setShowBanner(false) }}
-      />)
-    );
+        onDismiss={() => {
+          setShowBanner(false);
+        }}
+      />
+    )
+  );
 
   const apiVersionOptions = [
-    {value: 'unstable', label: 'unstable'},
-    {value: '2022-01', label: '2022-01'},
-    {value: '2022-04', label: '2022-04'},
-    {value: '2022-07', label: '2022-07'},
-    {value: '2022-09', label: '2022-09'},
-    {value: '2023-01', label: '2023-01'},
-    {value: '2023-04', label: '2023-04'},
-    {value: '2023-07', label: '2023-07'},
-    {value: '2023-09', label: '2023-09'},
+    { value: "unstable", label: "unstable" },
+    { value: "2022-01", label: "2022-01" },
+    { value: "2022-04", label: "2022-04" },
+    { value: "2022-07", label: "2022-07" },
+    { value: "2022-09", label: "2022-09" },
+    { value: "2023-01", label: "2023-01" },
+    { value: "2023-04", label: "2023-04" },
+    { value: "2023-07", label: "2023-07" },
+    { value: "2023-09", label: "2023-09" },
   ];
 
   if (isLoading) {
     return (
-      <Page fullWidth >
-        <div style={{display: "flex", height: "100vh", alignItems: "center", justifyContent: "center"}}>
+      <Page fullWidth>
+        <div
+          style={{
+            display: "flex",
+            height: "100vh",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
           <Spinner accessibilityLabel="Spinner" size="large" />
         </div>
       </Page>
-    )
+    );
   }
 
   return (
@@ -152,38 +164,40 @@ export default function Index() {
               <BlockStack gap="5">
                 <BlockStack gap="2">
                   <Text as="h2" variant="headingMd">
-                    Configure your Payments App
+                    Configure your Budpay Settings
                   </Text>
-                  <Text as="p">
-                    Below you'll find a form to configure your
-                    app with the current shop: <Text as="span" color="success">{shopDomain}</Text>
-                  </Text>
-                  <Text as="p">
-                    If any details are already present, your app has already been configured with the shop.
-                  </Text>
+                  <Text as="p">Your details can be found on your Budpay dashboard.</Text>
                 </BlockStack>
                 <BlockStack gap="2">
                   <Card>
                     <Form method="post">
                       <FormLayout>
                         <TextField
-                          label="Account Name"
-                          name="accountName"
-                          onChange={(change) => setAccountName(change)}
-                          value={accountName}
+                          label="Public Key"
+                          name="publicKey"
+                          onChange={(value) => setPublicKey(value)}
+                          value={publicKey}
                           autoComplete="off"
+                        />
+                        <TextField
+                          label="Secret Key"
+                          name="secretKey"
+                          onChange={(value) => setSecretKey(value)}
+                          value={secretKey}
+                          autoComplete="off"
+                          type="password"
                         />
                         <Checkbox
                           label="Ready?"
                           name="ready"
                           checked={ready}
-                          onChange={(change) => setReady(change)}
+                          onChange={(value) => setReady(value)}
                           value={ready.toString()}
                         />
                         <Select
                           label="API Version"
                           name="apiVersion"
-                          onChange={(change) => setApiVersion(change)}
+                          onChange={(value) => setApiVersion(value)}
                           options={apiVersionOptions}
                           value={apiVersion}
                         />
@@ -196,13 +210,6 @@ export default function Index() {
             </Card>
           </Layout.Section>
         </Layout>
-
-        <FooterHelp>
-          <Text as="span">Learn more about </Text>
-          <Link url="https://shopify.dev/docs/apps/payments" target="_blank">
-            payments apps
-          </Link>
-        </FooterHelp>
       </BlockStack>
     </Page>
   );

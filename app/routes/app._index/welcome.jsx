@@ -8,7 +8,7 @@ import {
 export default function Welcome() {
   return (
     <CalloutCard
-      title="Congrats on creating a new Shopify payments app 💸 🎉"
+      title="Budpay Payments 💸 🎉"
       illustration=""
       primaryAction={{
         content: "Dashboard",
@@ -17,15 +17,10 @@ export default function Welcome() {
     >
       <BlockStack gap="2">
         <Text as="p">
-          This payments app template includes the essential
-          non-embedded setup to start a developing a payments app, including
-          necessary endpoints, configuration, and a demo performing mutations through the{" "}
+          Easily make collection via Budpay. your keys cane be found on your {" "}
           <Link url="https://shopify.dev/docs/api/payments-apps" target="_blank">
-            Payments Apps API.
+          Merchant Dashboard
           </Link>
-        </Text>
-        <Text as="p">
-          The linked dashboard shows the stored refund sessions - both resolved and new.
         </Text>
       </BlockStack>
     </CalloutCard>
