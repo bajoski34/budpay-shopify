@@ -20,7 +20,7 @@ npm run dev
 
 ## Deployment
 
-Add the variables below to your `.env` file:
+Make sure these environment variables are present on the machine hosting you app
 
 ```shell
 SHOPIFY_APP_URL=your-app-url-with-https
